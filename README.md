@@ -43,6 +43,10 @@ To uninstall:
 make uninstall
 ```
 
+## Maintainer
+
+Frederick Price <fprice@pricemail.ca>
+
 ## License
 
-ISC
+BSD 3-Clause

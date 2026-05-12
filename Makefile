@@ -11,6 +11,15 @@ all: $(PLUGIN_NAME).so
 $(PLUGIN_NAME).so: $(PLUGIN_NAME).c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
+$(PLUGIN_NAME).o: $(PLUGIN_NAME).c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+test_$(PLUGIN_NAME): test_$(PLUGIN_NAME).c $(PLUGIN_NAME).o
+	$(CC) $(CFLAGS) -o $@ $^ -lm
+
+test: test_$(PLUGIN_NAME)
+	./test_$(PLUGIN_NAME)
+
 install: all
 	mkdir -p $(INSTALL_DIR)
 	cp $(PLUGIN_NAME).so manifest.ttl volumepanning.ttl $(INSTALL_DIR)/
@@ -19,6 +28,6 @@ uninstall:
 	rm -rf $(INSTALL_DIR)
 
 clean:
-	rm -f $(PLUGIN_NAME).so
+	rm -f $(PLUGIN_NAME).so $(PLUGIN_NAME).o test_$(PLUGIN_NAME)
 
-.PHONY: all install uninstall clean
+.PHONY: all install uninstall clean test
