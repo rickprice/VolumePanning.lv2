@@ -9,6 +9,7 @@ An LV2 plugin that converts a mono input to a stereo output with volume, pan, mu
 | Pan | -1.0 to 1.0 | 0.0 | Stereo position — -1 full left, 0 centre, +1 full right |
 | Volume | 0.0 to 2.0 | 1.0 | Linear gain applied to both channels |
 | Mute | 0 / 1 | 0 | Silences output when enabled |
+| Mute Invert | 0 / 1 | 0 | Inverts the sense of Mute — when on, the plugin is silent while Mute is off and passes audio while Mute is on |
 | Enabled | 0 / 1 | 1 | Bypass — when off, input is passed through to both channels unchanged |
 
 Panning uses a constant-power (equal-power) law so perceived loudness stays consistent across the stereo field.

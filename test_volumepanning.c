@@ -22,8 +22,9 @@ enum {
     PORT_OUT_R   = 2,
     PORT_PAN     = 3,
     PORT_VOLUME  = 4,
-    PORT_MUTE    = 5,
-    PORT_ENABLED = 6,
+    PORT_MUTE         = 5,
+    PORT_ENABLED      = 6,
+    PORT_MUTE_INVERT  = 7,
 };
 
 #define NSAMPLES 64
@@ -57,6 +58,7 @@ typedef struct {
     float volume;
     float mute;
     float enabled;
+    float mute_invert;
 } Fixture;
 
 static const LV2_Descriptor* desc = NULL;
@@ -72,14 +74,16 @@ static Fixture* fx_create(void)
     desc->connect_port(f->handle, PORT_OUT_R,   f->out_r);
     desc->connect_port(f->handle, PORT_PAN,     &f->pan);
     desc->connect_port(f->handle, PORT_VOLUME,  &f->volume);
-    desc->connect_port(f->handle, PORT_MUTE,    &f->mute);
-    desc->connect_port(f->handle, PORT_ENABLED, &f->enabled);
+    desc->connect_port(f->handle, PORT_MUTE,        &f->mute);
+    desc->connect_port(f->handle, PORT_ENABLED,     &f->enabled);
+    desc->connect_port(f->handle, PORT_MUTE_INVERT, &f->mute_invert);
 
     /* Default state: unity gain, centre pan, active */
-    f->pan     = 0.0f;
-    f->volume  = 1.0f;
-    f->mute    = 0.0f;
-    f->enabled = 1.0f;
+    f->pan         = 0.0f;
+    f->volume      = 1.0f;
+    f->mute        = 0.0f;
+    f->enabled     = 1.0f;
+    f->mute_invert = 0.0f;
 
     for (int i = 0; i < NSAMPLES; ++i)
         f->in[i] = 1.0f;
@@ -499,6 +503,73 @@ static void test_output_gain_formula(void)
     fx_destroy(f);
 }
 
+static void test_mute_invert_alone_silences(void)
+{
+    printf("test_mute_invert_alone_silences\n");
+    /* mute=0, mute_invert=1 → effective mute = 0 XOR 1 = 1 → silence */
+    Fixture* f      = fx_create();
+    f->mute_invert  = 1.0f;
+    fx_run(f);
+
+    CHECK(all_near(f->out_l, 0.0f, EPSILON),
+          "mute_invert alone: left = 0");
+    CHECK(all_near(f->out_r, 0.0f, EPSILON),
+          "mute_invert alone: right = 0");
+
+    fx_destroy(f);
+}
+
+static void test_mute_invert_cancels_mute(void)
+{
+    printf("test_mute_invert_cancels_mute\n");
+    /* mute=1, mute_invert=1 → effective mute = 1 XOR 1 = 0 → audio passes */
+    Fixture* f      = fx_create();
+    f->mute         = 1.0f;
+    f->mute_invert  = 1.0f;
+    fx_run(f);
+
+    float expected = cosf((float)(M_PI / 4.0));
+    CHECK_NEAR(f->out_l[0], expected, EPSILON,
+               "mute_invert cancels mute: left signal passes");
+    CHECK_NEAR(f->out_r[0], expected, EPSILON,
+               "mute_invert cancels mute: right signal passes");
+
+    fx_destroy(f);
+}
+
+static void test_mute_invert_off_no_effect(void)
+{
+    printf("test_mute_invert_off_no_effect\n");
+    /* mute=0, mute_invert=0 → behaves identically to no mute at all */
+    Fixture* f = fx_create();
+    fx_run(f);
+
+    float expected = cosf((float)(M_PI / 4.0));
+    CHECK_NEAR(f->out_l[0], expected, EPSILON,
+               "mute_invert=0: left signal unaffected");
+    CHECK_NEAR(f->out_r[0], expected, EPSILON,
+               "mute_invert=0: right signal unaffected");
+
+    fx_destroy(f);
+}
+
+static void test_bypass_overrides_mute_invert(void)
+{
+    printf("test_bypass_overrides_mute_invert\n");
+    /* bypass takes priority over mute_invert: input passes through unchanged */
+    Fixture* f      = fx_create();
+    f->enabled      = 0.0f;
+    f->mute_invert  = 1.0f;  /* would silence if bypass weren't active */
+    fx_run(f);
+
+    CHECK(all_near(f->out_l, 1.0f, EPSILON),
+          "bypass+mute_invert: left = input (bypass wins)");
+    CHECK(all_near(f->out_r, 1.0f, EPSILON),
+          "bypass+mute_invert: right = input (bypass wins)");
+
+    fx_destroy(f);
+}
+
 /* ---- main ---- */
 
 int main(void)
@@ -521,8 +592,12 @@ int main(void)
     test_mute_silences_output();
     test_mute_overrides_volume();
     test_unmute_restores_signal();
+    test_mute_invert_alone_silences();
+    test_mute_invert_cancels_mute();
+    test_mute_invert_off_no_effect();
     test_bypass_passes_input_through();
     test_bypass_overrides_mute();
+    test_bypass_overrides_mute_invert();
     test_re_enable_restores_processing();
     test_silent_input();
     test_negative_input_sign_preserved();

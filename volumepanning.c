@@ -17,8 +17,9 @@ typedef enum {
     PORT_OUT_R   = 2,
     PORT_PAN     = 3,
     PORT_VOLUME  = 4,
-    PORT_MUTE    = 5,
-    PORT_ENABLED = 6,
+    PORT_MUTE         = 5,
+    PORT_ENABLED      = 6,
+    PORT_MUTE_INVERT  = 7,
 } PortIndex;
 
 typedef struct {
@@ -29,6 +30,7 @@ typedef struct {
     const float* volume;
     const float* mute;
     const float* enabled;
+    const float* mute_invert;
 } Plugin;
 
 static LV2_Handle instantiate(
@@ -50,8 +52,9 @@ static void connect_port(LV2_Handle instance, uint32_t port, void* data)
     case PORT_OUT_R:   self->out_r   = (float*)data;       break;
     case PORT_PAN:     self->pan     = (const float*)data; break;
     case PORT_VOLUME:  self->volume  = (const float*)data; break;
-    case PORT_MUTE:    self->mute    = (const float*)data; break;
-    case PORT_ENABLED: self->enabled = (const float*)data; break;
+    case PORT_MUTE:         self->mute         = (const float*)data; break;
+    case PORT_ENABLED:      self->enabled      = (const float*)data; break;
+    case PORT_MUTE_INVERT:  self->mute_invert  = (const float*)data; break;
     }
 }
 
@@ -74,7 +77,8 @@ static void run(LV2_Handle instance, uint32_t n_samples)
         return;
     }
 
-    if (*self->mute >= 0.5f) {
+    const int muted = (*self->mute >= 0.5f) ^ (*self->mute_invert >= 0.5f);
+    if (muted) {
         for (uint32_t i = 0; i < n_samples; ++i) {
             out_l[i] = 0.0f;
             out_r[i] = 0.0f;
