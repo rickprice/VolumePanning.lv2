@@ -90,7 +90,7 @@ static void run(LV2_Handle instance, uint32_t n_samples)
        pan=-1 → full left, pan=0 → centre, pan=+1 → full right.
        angle sweeps 0..π/2 so cos²+sin²=1 (total power preserved). */
     const float angle = (*self->pan + 1.0f) * (float)(M_PI / 4.0);
-    const float vol   = *self->volume;
+    const float vol   = powf(10.0f, *self->volume / 20.0f);
     const float gl    = vol * cosf(angle);
     const float gr    = vol * sinf(angle);
 
