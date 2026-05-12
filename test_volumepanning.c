@@ -266,17 +266,17 @@ static void test_volume_zero(void)
     fx_destroy(f);
 }
 
-static void test_volume_double(void)
+static void test_volume_max(void)
 {
-    printf("test_volume_double\n");
+    printf("test_volume_max\n");
     Fixture* f = fx_create();
     f->pan    = 0.0f;
-    f->volume = 2.0f;
+    f->volume = 10.0f;
     fx_run(f);
 
-    float expected = 2.0f * cosf((float)(M_PI / 4.0));
-    CHECK_NEAR(f->out_l[0], expected, EPSILON, "volume 2.0: left = 2·cos(π/4)");
-    CHECK_NEAR(f->out_r[0], expected, EPSILON, "volume 2.0: right = 2·sin(π/4)");
+    float expected = 10.0f * cosf((float)(M_PI / 4.0));
+    CHECK_NEAR(f->out_l[0], expected, EPSILON, "volume 10.0: left = 10·cos(π/4)");
+    CHECK_NEAR(f->out_r[0], expected, EPSILON, "volume 10.0: right = 10·sin(π/4)");
 
     fx_destroy(f);
 }
@@ -482,7 +482,7 @@ static void test_output_gain_formula(void)
         {  0.3f, 1.5f },
         {  0.0f, 0.0f },
         {  1.0f, 1.0f },
-        { -1.0f, 2.0f },
+        { -1.0f, 10.0f },
     };
 
     Fixture* f = fx_create();
@@ -586,7 +586,7 @@ int main(void)
     test_constant_power_law();
     test_pan_monotonic();
     test_volume_zero();
-    test_volume_double();
+    test_volume_max();
     test_volume_scales_linearly();
     test_unity_gain_at_centre_with_sqrt2();
     test_mute_silences_output();
