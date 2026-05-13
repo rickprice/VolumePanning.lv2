@@ -17,10 +17,10 @@ enum {
     PORT_IN          = 0,
     PORT_OUT_L       = 1,
     PORT_OUT_R       = 2,
-    PORT_PAN         = 3,
+    PORT_ENABLED     = 3,
     PORT_VOLUME      = 4,
-    PORT_MUTE        = 5,
-    PORT_ENABLED     = 6,
+    PORT_PAN         = 5,
+    PORT_MUTE        = 6,
     PORT_MUTE_INVERT = 7,
 };
 

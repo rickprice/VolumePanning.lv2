@@ -17,7 +17,7 @@ $(PLUGIN_NAME).o: $(PLUGIN_NAME).c
 test_$(PLUGIN_NAME): test_$(PLUGIN_NAME).c $(PLUGIN_NAME).o
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
-test: test_$(PLUGIN_NAME)
+test: test_$(PLUGIN_NAME) $(PLUGIN_NAME).so
 	./test_$(PLUGIN_NAME)
 
 install: all
