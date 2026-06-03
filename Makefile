@@ -3,7 +3,7 @@ INSTALL_DIR = $(HOME)/.lv2/$(PLUGIN_NAME).lv2
 
 CC     = gcc
 CFLAGS = $(shell pkg-config --cflags lv2) -std=c99 -fPIC -fvisibility=hidden \
-         -O2 -Wall -Wextra -Wpedantic
+         -O3 -march=native -ffast-math -Wall -Wextra -Wpedantic
 LDFLAGS = -shared -Wl,-soname,$(PLUGIN_NAME).so -lm
 
 all: $(PLUGIN_NAME).so

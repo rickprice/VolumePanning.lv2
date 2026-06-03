@@ -2,6 +2,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
+#include <immintrin.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -70,19 +72,15 @@ static void run(LV2_Handle instance, uint32_t n_samples)
     /* lv2:enabled — when 0 the host may skip run() entirely, but we handle it
        here too so plugin-level bypass works without host support. */
     if (*self->enabled < 0.5f) {
-        for (uint32_t i = 0; i < n_samples; ++i) {
-            out_l[i] = in[i];
-            out_r[i] = in[i];
-        }
+        memcpy(out_l, in, n_samples * sizeof(float));
+        memcpy(out_r, in, n_samples * sizeof(float));
         return;
     }
 
     const int muted = (*self->mute >= 0.5f) ^ (*self->mute_invert >= 0.5f);
     if (muted) {
-        for (uint32_t i = 0; i < n_samples; ++i) {
-            out_l[i] = 0.0f;
-            out_r[i] = 0.0f;
-        }
+        memset(out_l, 0, n_samples * sizeof(float));
+        memset(out_r, 0, n_samples * sizeof(float));
         return;
     }
 
@@ -94,7 +92,19 @@ static void run(LV2_Handle instance, uint32_t n_samples)
     const float gl    = vol * cosf(angle);
     const float gr    = vol * sinf(angle);
 
-    for (uint32_t i = 0; i < n_samples; ++i) {
+    uint32_t i = 0;
+#ifdef __AVX2__
+    {
+        const __m256 vgl = _mm256_set1_ps(gl);
+        const __m256 vgr = _mm256_set1_ps(gr);
+        for (; i + 8 <= n_samples; i += 8) {
+            const __m256 vin = _mm256_loadu_ps(in + i);
+            _mm256_storeu_ps(out_l + i, _mm256_mul_ps(vin, vgl));
+            _mm256_storeu_ps(out_r + i, _mm256_mul_ps(vin, vgr));
+        }
+    }
+#endif
+    for (; i < n_samples; ++i) {
         out_l[i] = in[i] * gl;
         out_r[i] = in[i] * gr;
     }
