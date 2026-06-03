@@ -24,6 +24,8 @@
 
     lv2:optionalFeature lv2:hardRTCapable ;
 
+    # DO NOT reorder ports — lv2:index values are LV2 ABI (baked into host presets/state).
+    # Canonical order: audio inputs (0), audio outputs (1-2), control ports (3-7, enabled first).
     lv2:port [
         a lv2:AudioPort, lv2:InputPort ;
         lv2:index 0 ;

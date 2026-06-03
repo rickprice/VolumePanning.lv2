@@ -13,6 +13,8 @@
 
 #define PLUGIN_URI "http://fprice.pricemail.ca/plugins/volumepanning"
 
+/* DO NOT reorder these — indices are LV2 ABI (baked into host presets/state).
+   Canonical order: audio inputs, audio outputs, control ports (enabled first). */
 typedef enum {
     PORT_IN          = 0,
     PORT_OUT_L       = 1,
